@@ -34,6 +34,8 @@ namespace CatCarrier
             Metrics.SuppressDefaultMetrics();
             app.MapMetrics();
 
+            app.MapGet("/", () => { });
+
             app.Run();
         }
     }
