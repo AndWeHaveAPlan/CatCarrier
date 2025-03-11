@@ -44,7 +44,7 @@ namespace CatCarrier.Webhook
         private readonly Counter _workflowDurationCounter = Metrics.CreateCounter(
             "github_workflow_run_duration_seconds",
             "",
-            PrometheusLabelsCollection<WorkflowJobLabelGroup>.GetNames()
+            PrometheusLabelsCollection<WorkflowRunLabelGroup>.GetNames()
         );
 
         /// <summary>
