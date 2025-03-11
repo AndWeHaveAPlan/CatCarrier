@@ -1,15 +1,6 @@
 ﻿namespace CatCarrier.PrometheusMetrics;
 
-public class PrometheusLabelAttribute : Attribute
+public class PrometheusLabelAttribute(string? name = null) : Attribute
 {
-    public PrometheusLabelAttribute()
-    {
-    }
-
-    public PrometheusLabelAttribute(string? name)
-    {
-        Name = name;
-    }
-
-    public string? Name { get; }
+    public string? Name { get; } = name;
 }

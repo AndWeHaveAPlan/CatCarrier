@@ -12,6 +12,7 @@ namespace CatCarrier
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Configuration.AddEnvironmentVariables(prefix: "CAT_CARRIER_");
 
             builder.Services.AddControllers();
             builder.Services.AddSingleton<WebhookEventProcessor, EventProcessor>();
@@ -20,11 +21,15 @@ namespace CatCarrier
 
             // Configure the HTTP request pipeline.
 
-            //app.UseAuthorization();
+            var githubWebhookPath = builder.Configuration.GetSection("Github")["WebhookPath"];
+            if (string.IsNullOrWhiteSpace(githubWebhookPath))
+            {
+                githubWebhookPath = "/github";
+            }
 
-            app.MapControllers();
+            app.MapGitHubWebhooks(githubWebhookPath, builder.Configuration.GetSection("Github")["WebhookSecret"])
+                .AddEndpointFilter<IEndpointConventionBuilder, ExceptionFilter>();
 
-            app.MapGitHubWebhooks("/github");
 
             Metrics.SuppressDefaultMetrics();
             app.MapMetrics();
