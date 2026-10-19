@@ -1,3 +1,4 @@
+using CatCarrier.Runners;
 using CatCarrier.Webhook;
 using Octokit.Webhooks;
 using Octokit.Webhooks.AspNetCore;
@@ -16,6 +17,13 @@ namespace CatCarrier
 
             builder.Services.AddControllers();
             builder.Services.AddSingleton<WebhookEventProcessor, EventProcessor>();
+
+            // Runner gauges. Off unless Github:Runners:Enabled is set, so an
+            // existing deployment keeps serving the webhook metrics alone.
+            builder.Services.AddHttpClient();
+            builder.Services.Configure<RunnersOptions>(
+                builder.Configuration.GetSection(RunnersOptions.SectionName));
+            builder.Services.AddHostedService<RunnerPoller>();
 
             var app = builder.Build();
 
