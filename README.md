@@ -85,9 +85,21 @@ Everything binds from configuration, and `AddEnvironmentVariables` reads the
 | `Github:Runners:Orgs` | empty | One entry per organisation |
 
 Each org needs either `Token`, or `AppId` plus `InstallationId` plus
-`PrivateKey` or `PrivateKeyPath`. A GitHub App needs the organisation
-self-hosted runners permission. RS256 is signed with the runtime's own RSA, so
-there is no extra package to install, and PKCS#1 and PKCS#8 PEM keys both work.
+`PrivateKey`. A GitHub App needs the organisation self-hosted runners
+permission. RS256 is signed with the runtime's own RSA, so there is no extra
+package to install, and PKCS#1 and PKCS#8 PEM keys both work.
+
+`PrivateKey` is the PEM itself, not a path. A secret store writes it straight
+into configuration, which keeps the key out of the image and leaves no file on
+disk to keep in step. Carried through an environment variable the line breaks
+often arrive escaped, and that form is accepted as well:
+
+```sh
+CAT_CARRIER_Github__Runners__Orgs__0__PrivateKey="-----BEGIN RSA PRIVATE KEY-----\nMIIE...\n-----END RSA PRIVATE KEY-----"
+```
+
+Treat it like any other secret. It is a credential sitting in configuration, so
+do not log the configuration tree.
 
 The poller is registered only when `Enabled` is set and at least one org has
 credentials. Without that it is never constructed, so a deployment that does not
@@ -104,13 +116,13 @@ is better than quietly matching nothing.
     "Runners": {
       "Enabled": true,
       "PollIntervalSeconds": 30,
-      "LabelAllowlist": "^(parity-macos|parity-macos-large)$",
+      "LabelAllowlist": "^(macos|macos-xl)$",
       "Orgs": [
         {
-          "Name": "paritytech",
+          "Name": "my-org",
           "AppId": "123456",
           "InstallationId": "7890123",
-          "PrivateKeyPath": "/etc/catcarrier/paritytech.pem"
+          "PrivateKey": "-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
         }
       ]
     }

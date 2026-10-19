@@ -88,19 +88,18 @@ public sealed class GitHubTokenSource(RunnerOrgOptions options, HttpClient http,
         var signingInput = Encoding.ASCII.GetBytes($"{header}.{payload}");
 
         using var rsa = RSA.Create();
-        rsa.ImportFromPem(ReadPrivateKey());
+        rsa.ImportFromPem(PrivateKeyPem());
         var signature = rsa.SignData(signingInput, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
         return $"{header}.{payload}.{Base64Url(signature)}";
     }
 
-    private string ReadPrivateKey()
+    private string PrivateKeyPem()
     {
-        // The literal wins when both are set, so a secret mounted as a file can
-        // be overridden in place for a local run.
-        return !string.IsNullOrWhiteSpace(options.PrivateKey)
-            ? options.PrivateKey
-            : File.ReadAllText(options.PrivateKeyPath!);
+        // A PEM carried through an environment variable often arrives with its
+        // line breaks escaped. A real PEM is base64 and dashes, so a literal
+        // backslash-n is always the escaped form and never key material.
+        return options.PrivateKey!.Replace("\\n", "\n");
     }
 
     private static string Base64Url(byte[] value) =>

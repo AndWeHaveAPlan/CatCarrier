@@ -86,7 +86,7 @@ public sealed class RunnerPoller : BackgroundService
         {
             _logger.LogError(
                 "Ignoring organisation {Organization}: it needs a Token, or AppId plus "
-                + "InstallationId plus PrivateKey or PrivateKeyPath",
+                + "InstallationId plus PrivateKey",
                 string.IsNullOrWhiteSpace(rejected.Name) ? "<unnamed>" : rejected.Name);
         }
 

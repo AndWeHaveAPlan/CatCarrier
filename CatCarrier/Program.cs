@@ -49,8 +49,7 @@ namespace CatCarrier
             {
                 app.Logger.LogInformation(
                     "Runner polling is off. It needs {Section}:Enabled and at least one "
-                    + "organisation with a Token, or AppId plus InstallationId plus "
-                    + "PrivateKey or PrivateKeyPath.",
+                    + "organisation with a Token, or AppId plus InstallationId plus PrivateKey.",
                     RunnersOptions.SectionName);
             }
 

@@ -60,18 +60,15 @@ public sealed class RunnerOrgOptions
 
     /// <summary>
     /// The App private key as PEM. PKCS#1 and PKCS#8 are both accepted.
+    /// A secret store writes it straight into configuration, so there is no
+    /// file to mount and nothing on disk to keep in step with the key.
     /// </summary>
     public string? PrivateKey { get; set; }
-
-    /// <summary>
-    /// A file holding the same PEM, for a key mounted from a secret.
-    /// </summary>
-    public string? PrivateKeyPath { get; set; }
 
     public bool HasAppCredentials =>
         !string.IsNullOrWhiteSpace(AppId)
         && !string.IsNullOrWhiteSpace(InstallationId)
-        && (!string.IsNullOrWhiteSpace(PrivateKey) || !string.IsNullOrWhiteSpace(PrivateKeyPath));
+        && !string.IsNullOrWhiteSpace(PrivateKey);
 
     public bool IsUsable => !string.IsNullOrWhiteSpace(Name)
                             && (!string.IsNullOrWhiteSpace(Token) || HasAppCredentials);
