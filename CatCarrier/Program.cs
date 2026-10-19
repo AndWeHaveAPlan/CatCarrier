@@ -18,12 +18,18 @@ namespace CatCarrier
             builder.Services.AddControllers();
             builder.Services.AddSingleton<WebhookEventProcessor, EventProcessor>();
 
-            // Runner gauges. Off unless Github:Runners:Enabled is set, so an
-            // existing deployment keeps serving the webhook metrics alone.
-            builder.Services.AddHttpClient();
-            builder.Services.Configure<RunnersOptions>(
-                builder.Configuration.GetSection(RunnersOptions.SectionName));
-            builder.Services.AddHostedService<RunnerPoller>();
+            // Runner gauges. The hosted service is added only when it is
+            // configured to run, so an existing deployment keeps serving the
+            // webhook metrics alone and never constructs the poller.
+            var runnersSection = builder.Configuration.GetSection(RunnersOptions.SectionName);
+            var runners = runnersSection.Get<RunnersOptions>() ?? new RunnersOptions();
+            builder.Services.Configure<RunnersOptions>(runnersSection);
+
+            if (runners.ShouldPoll)
+            {
+                builder.Services.AddHttpClient();
+                builder.Services.AddHostedService<RunnerPoller>();
+            }
 
             var app = builder.Build();
 
@@ -38,6 +44,15 @@ namespace CatCarrier
             app.MapGitHubWebhooks(githubWebhookPath, builder.Configuration.GetSection("Github")["WebhookSecret"])
                 .AddEndpointFilter<IEndpointConventionBuilder, ExceptionFilter>();
 
+
+            if (!runners.ShouldPoll)
+            {
+                app.Logger.LogInformation(
+                    "Runner polling is off. It needs {Section}:Enabled and at least one "
+                    + "organisation with a Token, or AppId plus InstallationId plus "
+                    + "PrivateKey or PrivateKeyPath.",
+                    RunnersOptions.SectionName);
+            }
 
             Metrics.SuppressDefaultMetrics();
             app.MapMetrics();

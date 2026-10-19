@@ -89,6 +89,15 @@ Each org needs either `Token`, or `AppId` plus `InstallationId` plus
 self-hosted runners permission. RS256 is signed with the runtime's own RSA, so
 there is no extra package to install, and PKCS#1 and PKCS#8 PEM keys both work.
 
+The poller is registered only when `Enabled` is set and at least one org has
+credentials. Without that it is never constructed, so a deployment that does not
+use it cannot be brought down by a setting it does not read. The startup log
+says which of the two is missing.
+
+With polling on, a `LabelAllowlist` that is not a valid regex stops the app at
+startup and names the setting. That is a value you asked to be used, so failing
+is better than quietly matching nothing.
+
 ```json
 {
   "Github": {

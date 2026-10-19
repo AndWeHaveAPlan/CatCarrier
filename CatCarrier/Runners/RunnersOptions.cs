@@ -33,6 +33,15 @@ public sealed class RunnersOptions
     public string ApiBaseUrl { get; set; } = "https://api.github.com/";
 
     public List<RunnerOrgOptions> Orgs { get; set; } = [];
+
+    /// <summary>
+    /// Whether the poller is worth registering. Polling needs the switch and at
+    /// least one organisation it can authenticate as. Program.cs checks this
+    /// before adding the hosted service, so an unconfigured deployment never
+    /// constructs the poller and cannot be brought down by a value it does not
+    /// use.
+    /// </summary>
+    public bool ShouldPoll => Enabled && Orgs.Exists(org => org.IsUsable);
 }
 
 public sealed class RunnerOrgOptions

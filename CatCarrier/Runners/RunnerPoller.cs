@@ -66,18 +66,21 @@ public sealed class RunnerPoller : BackgroundService
         _loggerFactory = loggerFactory;
         _logger = loggerFactory.CreateLogger<RunnerPoller>();
         _client = new RunnerApiClient(CreateHttpClient());
-        _labelAllowlist = new Regex(
-            _options.LabelAllowlist, RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+        try
+        {
+            _labelAllowlist = new Regex(
+                _options.LabelAllowlist, RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+        }
+        catch (ArgumentException exception)
+        {
+            throw new InvalidOperationException(
+                $"{RunnersOptions.SectionName}:LabelAllowlist is not a valid regex: "
+                + $"'{_options.LabelAllowlist}'", exception);
+        }
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (!_options.Enabled)
-        {
-            _logger.LogInformation("Runner polling is off. Set Github:Runners:Enabled to turn it on.");
-            return;
-        }
-
         var orgs = _options.Orgs.Where(org => org.IsUsable).ToArray();
         foreach (var rejected in _options.Orgs.Except(orgs))
         {
@@ -87,9 +90,12 @@ public sealed class RunnerPoller : BackgroundService
                 string.IsNullOrWhiteSpace(rejected.Name) ? "<unnamed>" : rejected.Name);
         }
 
+        // Program.cs only registers this service when at least one organisation
+        // is usable, so this is a guard against a future direct registration
+        // rather than a path reached by configuration.
         if (orgs.Length == 0)
         {
-            _logger.LogError("Runner polling is on, but no organisation is configured.");
+            _logger.LogError("Runner polling started with no usable organisation.");
             return;
         }
 
